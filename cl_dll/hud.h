@@ -126,6 +126,7 @@ public:
 	void UserCmd_Close();
 	void UserCmd_NextWeapon();
 	void UserCmd_PrevWeapon();
+	void UserCmd_LastWeapon();
 
 private:
 	float m_fFade;
