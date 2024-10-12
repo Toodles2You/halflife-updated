@@ -93,15 +93,11 @@ cvar_t* cl_bobtilt = nullptr;
 cvar_t* r_decals = nullptr;
 cvar_t* crosshair = nullptr;
 
-void ShutdownInput();
-
-//DECLARE_MESSAGE(m_Logo, Logo)
 int __MsgFunc_Logo(const char* pszName, int iSize, void* pbuf)
 {
 	return static_cast<int>(gHUD.MsgFunc_Logo(pszName, iSize, pbuf));
 }
 
-//DECLARE_MESSAGE(m_Logo, Logo)
 int __MsgFunc_ResetHUD(const char* pszName, int iSize, void* pbuf)
 {
 	return static_cast<int>(gHUD.MsgFunc_ResetHUD(pszName, iSize, pbuf));
@@ -385,7 +381,6 @@ void CHud::VidInit()
 	// ----------
 	// Load Sprites
 	// ---------
-	//	m_hsprFont = LoadSprite("sprites/%d_font.spr");
 
 	m_hsprLogo = 0;
 	m_hsprCursor = 0;
@@ -602,13 +597,6 @@ bool CHud::Update_SetFOV(const int iFOV)
 {
 	int def_fov = CVAR_GET_FLOAT("default_fov");
 
-	//Weapon prediction already takes care of changing the fog. ( g_lastFOV ).
-	//But it doesn't restore correctly so this still needs to be used
-	/*
-	if ( cl_lw && cl_lw->value )
-		return 1;
-		*/
-
 	g_lastFOV = iFOV;
 
 	if (iFOV == 0)
@@ -641,8 +629,6 @@ bool CHud::Update_SetFOV(const int iFOV)
 void CHud::AddHudElem(CHudBase* phudelem)
 {
 	HUDLIST *pdl, *ptemp;
-
-	//phudelem->Think();
 
 	if (!phudelem)
 		return;

@@ -67,8 +67,6 @@ void FillRGBA(int x, int y, int width, int height, int r, int g, int b, int a);
 // ScreenWidth returns the width of the screen, in pixels
 #define ScreenWidth (gHUD.m_scrinfo.iWidth)
 
-#define BASE_XRES 640.f
-
 // use this to project world coordinates to screen coordinates
 #define XPROJECT(x) ((1.0f + (x)) * ScreenWidth * 0.5f)
 #define YPROJECT(y) ((1.0f - (y)) * ScreenHeight * 0.5f)
