@@ -494,7 +494,6 @@ private:
 	int m_iSpriteCount;
 	int m_iSpriteCountAllRes;
 	float m_flMouseSensitivity;
-	int m_iConcussionEffect;
 
 public:
 	HSPRITE m_hsprCursor;
@@ -592,7 +591,6 @@ public:
 	void MsgFunc_InitHUD(const char* pszName, int iSize, void* pbuf);
 	void MsgFunc_ViewMode(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_SetFOV(const char* pszName, int iSize, void* pbuf);
-	bool MsgFunc_Concuss(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_Weapons(const char* pszName, int iSize, void* pbuf);
 	bool Update_SetFOV(const int iFOV);
 
