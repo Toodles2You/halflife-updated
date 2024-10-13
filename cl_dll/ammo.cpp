@@ -40,6 +40,7 @@ void HUD_WeaponList(const int iId, const int iAmmoType, const int iAmmoType2);
 WeaponsResource gWR;
 
 int g_weaponselect = 0;
+int g_weaponlast = 0;
 
 void WeaponsResource::LoadAllWeaponSprites()
 {
@@ -256,6 +257,7 @@ DECLARE_COMMAND(m_Ammo, Slot10);
 DECLARE_COMMAND(m_Ammo, Close);
 DECLARE_COMMAND(m_Ammo, NextWeapon);
 DECLARE_COMMAND(m_Ammo, PrevWeapon);
+DECLARE_COMMAND(m_Ammo, LastWeapon);
 
 // width of ammo fonts
 #define AMMO_SMALL_WIDTH 10
@@ -288,6 +290,7 @@ bool CHudAmmo::Init()
 	HOOK_COMMAND("cancelselect", Close);
 	HOOK_COMMAND("invnext", NextWeapon);
 	HOOK_COMMAND("invprev", PrevWeapon);
+	HOOK_COMMAND("lastinv", LastWeapon);
 
 	Reset();
 
@@ -309,6 +312,8 @@ void CHudAmmo::Reset()
 
 	gpActiveSel = NULL;
 	gHUD.m_iHideHUDDisplay = 0;
+
+	g_weaponlast = WEAPON_NONE;
 
 	gWR.Reset();
 	gHR.Reset();
@@ -594,6 +599,7 @@ bool CHudAmmo::Update_CurWeapon(const int iState, const int iId, const int iClip
 	{
 		SetCrosshair(0, nullrc, 0, 0, 0);
 		m_pWeapon = nullptr;
+		g_weaponlast = WEAPON_NONE;
 		return false;
 	}
 
@@ -604,6 +610,7 @@ bool CHudAmmo::Update_CurWeapon(const int iState, const int iId, const int iClip
 		{
 			gHUD.m_fPlayerDead = true;
 			gpActiveSel = NULL;
+			g_weaponlast = WEAPON_NONE;
 			return true;
 		}
 		gHUD.m_fPlayerDead = false;
@@ -622,6 +629,11 @@ bool CHudAmmo::Update_CurWeapon(const int iState, const int iId, const int iClip
 
 	if (iState == 0) // we're not the current weapon, so update no more
 		return true;
+
+	if (m_pWeapon != nullptr && m_pWeapon->iId != pWeapon->iId)
+	{
+		g_weaponlast = m_pWeapon->iId;
+	}
 
 	m_pWeapon = pWeapon;
 
@@ -858,6 +870,25 @@ void CHudAmmo::UserCmd_PrevWeapon()
 	}
 
 	gpActiveSel = NULL;
+}
+
+// Selects the previous item in the menu
+void CHudAmmo::UserCmd_LastWeapon()
+{
+	if (gHUD.m_fPlayerDead || (gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) != 0)
+		return;
+
+	if (g_weaponlast != WEAPON_NONE)
+	{
+		gpActiveSel = gWR.GetWeapon(g_weaponlast);
+
+		if (gpActiveSel != nullptr)
+		{
+			ServerCmd(gpActiveSel->szName);
+			g_weaponselect = gpActiveSel->iId;
+			gpActiveSel = nullptr;
+		}
+	}
 }
 
 
