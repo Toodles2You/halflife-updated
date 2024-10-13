@@ -337,39 +337,6 @@ Vector CBaseEntity::FireBulletsPlayer(unsigned int cShots, Vector vecSrc, Vector
 
 /*
 =====================
-CBasePlayer::SelectItem
-
-  Switch weapons
-=====================
-*/
-void CBasePlayer::SelectItem(const char* pstr)
-{
-	if (!pstr)
-		return;
-
-	CBasePlayerItem* pItem = NULL;
-
-	if (!pItem)
-		return;
-
-
-	if (pItem == m_pActiveItem)
-		return;
-
-	if (m_pActiveItem)
-		m_pActiveItem->Holster();
-
-	m_pLastItem = m_pActiveItem;
-	m_pActiveItem = pItem;
-
-	if (m_pActiveItem)
-	{
-		m_pActiveItem->Deploy();
-	}
-}
-
-/*
-=====================
 CBasePlayer::Killed
 
 =====================
@@ -552,6 +519,39 @@ void CBasePlayer::PlaybackEvent(
 		afFlags,
 		bSendPosition || (afFlags & FEV_RELIABLE) != 0,
 		flDelay);
+}
+
+void CBasePlayer::SelectItem(int iId)
+{
+	if (iId <= WEAPON_NONE)
+		return;
+
+	if ((m_WeaponBits & (1ULL << iId)) == 0)
+		return;
+
+	CBasePlayerItem* pItem = g_pWpns[iId];
+
+	if (!pItem)
+		return;
+
+
+	if (pItem == m_pActiveItem)
+		return;
+
+	ResetAutoaim();
+
+	// FIX, this needs to queue them up and delay
+	if (m_pActiveItem)
+		m_pActiveItem->Holster();
+
+	m_pLastItem = m_pActiveItem;
+	m_pActiveItem = pItem;
+
+	if (m_pActiveItem)
+	{
+		m_pActiveItem->Deploy();
+		m_pActiveItem->UpdateItemInfo();
+	}
 }
 
 /*
@@ -747,7 +747,6 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 {
 	int i;
 	int buttonsChanged;
-	CBasePlayerWeapon* pWeapon = NULL;
 	CBasePlayerWeapon* pCurrent;
 	weapon_data_t *pfrom, *pto;
 	static int lasthealth;
@@ -758,67 +757,6 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 
 	//Lets weapons code use frametime to decrement timers and stuff.
 	gpGlobals->frametime = cmd->msec / 1000.0f;
-
-	// Fill in data based on selected weapon
-	// FIXME, make this a method in each weapon?  where you pass in an entity_state_t *?
-	switch (from->client.m_iId)
-	{
-	case WEAPON_CROWBAR:
-		pWeapon = &g_Crowbar;
-		break;
-
-	case WEAPON_GLOCK:
-		pWeapon = &g_Glock;
-		break;
-
-	case WEAPON_PYTHON:
-		pWeapon = &g_Python;
-		break;
-
-	case WEAPON_MP5:
-		pWeapon = &g_Mp5;
-		break;
-
-	case WEAPON_CROSSBOW:
-		pWeapon = &g_Crossbow;
-		break;
-
-	case WEAPON_SHOTGUN:
-		pWeapon = &g_Shotgun;
-		break;
-
-	case WEAPON_RPG:
-		pWeapon = &g_Rpg;
-		break;
-
-	case WEAPON_GAUSS:
-		pWeapon = &g_Gauss;
-		break;
-
-	case WEAPON_EGON:
-		pWeapon = &g_Egon;
-		break;
-
-	case WEAPON_HORNETGUN:
-		pWeapon = &g_HGun;
-		break;
-
-	case WEAPON_HANDGRENADE:
-		pWeapon = &g_HandGren;
-		break;
-
-	case WEAPON_SATCHEL:
-		pWeapon = &g_Satchel;
-		break;
-
-	case WEAPON_TRIPMINE:
-		pWeapon = &g_Tripmine;
-		break;
-
-	case WEAPON_SNARK:
-		pWeapon = &g_Snark;
-		break;
-	}
 
 	// Store pointer to our destination entity_state_t so we can get our origin, etc. from it
 	//  for setting up events on the client
@@ -876,6 +814,8 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 	// For random weapon events, use this seed to seed random # generator
 	player.random_seed = random_seed;
 
+	player.m_WeaponBits = gHUD.m_iWeaponBits;
+
 	// Get old buttons from previous state.
 	player.m_afButtonLast = from->playerstate.oldbuttons;
 
@@ -917,6 +857,13 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 		player.m_pActiveItem = nullptr;
 	}
 
+	// Now see if we issued a changeweapon command ( and we're not dead )
+	if (0 != cmd->weaponselect)
+	{
+		// Switched to a different weapon?
+		player.SelectItem(cmd->weaponselect);
+	}
+
 	if (player.m_pActiveItem != nullptr)
 	{
 		if (player.m_pActiveItem->m_iId == WEAPON_RPG)
@@ -932,43 +879,13 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 		{
 			if (player.m_flNextAttack <= 0)
 			{
-				pWeapon->ItemPostFrame();
-			}
-		}
-	}
-
-	// Assume that we are not going to switch weapons
-	to->client.m_iId = from->client.m_iId;
-
-	// Now see if we issued a changeweapon command ( and we're not dead )
-	if (0 != cmd->weaponselect && (player.pev->deadflag != (DEAD_DISCARDBODY + 1)))
-	{
-		// Switched to a different weapon?
-		if (from->weapondata[cmd->weaponselect].m_iId == cmd->weaponselect)
-		{
-			CBasePlayerWeapon* pNew = g_pWpns[cmd->weaponselect];
-			if (pNew && (pNew != pWeapon))
-			{
-				// Put away old weapon
-				if (player.m_pActiveItem)
-					player.m_pActiveItem->Holster();
-
-				player.m_pLastItem = player.m_pActiveItem;
-				player.m_pActiveItem = pNew;
-
-				// Deploy new weapon
-				if (player.m_pActiveItem)
-				{
-					player.m_pActiveItem->Deploy();
-				}
-
-				// Update weapon id so we can predict things correctly.
-				to->client.m_iId = cmd->weaponselect;
+				player.m_pActiveItem->ItemPostFrame();
 			}
 		}
 	}
 
 	// Copy in results of prediction code
+	to->client.m_iId = (player.m_pActiveItem != nullptr) ? player.m_pActiveItem->m_iId : WEAPON_NONE;
 	to->client.viewmodel = player.pev->viewmodel;
 	to->client.fov = player.m_iFOV;
 	to->client.weaponanim = player.pev->weaponanim;
@@ -995,7 +912,7 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 			g_Python.pev->body = bIsMultiplayer() ? 1 : 0;
 
 			// Force a fixed anim down to viewmodel
-			HUD_SendWeaponAnim(to->client.weaponanim, pWeapon->pev->body, true);
+			HUD_SendWeaponAnim(to->client.weaponanim, player.m_pActiveItem->pev->body, true);
 		}
 	}
 
