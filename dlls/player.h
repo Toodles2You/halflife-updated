@@ -227,7 +227,9 @@ public:
 	bool Restore(CRestore& restore) override;
 	void PackDeadPlayerItems();
 	void RemoveAllItems(bool removeSuit);
-	bool SwitchWeapon(CBasePlayerItem* pWeapon);
+	bool CanSelectItem(CBasePlayerItem* pItem);
+	bool SelectItem(CBasePlayerItem* pItem);
+	void SwitchWeapon(CBasePlayerItem* pWeapon);
 
 	/**
 	*	@brief Equips an appropriate weapon for the player if they don't have one equipped already.
@@ -277,7 +279,6 @@ public:
 	bool HasNamedPlayerItem(const char* pszItemName);
 	bool HasPlayerItemFromID(int nID);
 	bool HasWeapons(); // do I have ANY weapons?
-	void SelectNextItem(int iItem);
 	void SelectLastItem();
 	void SelectItem(const char* pstr);
 	void SelectItem(int iId);

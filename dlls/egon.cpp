@@ -71,10 +71,10 @@ void CEgon::Precache()
 }
 
 
-bool CEgon::Deploy()
+void CEgon::Deploy()
 {
 	m_fireState = FIRE_OFF;
-	return DefaultDeploy("models/v_egon.mdl", "models/p_egon.mdl", EGON_DRAW, "egon");
+	DefaultDeploy("models/v_egon.mdl", "models/p_egon.mdl", EGON_DRAW, "egon");
 }
 
 void CEgon::Holster()

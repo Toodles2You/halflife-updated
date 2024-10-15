@@ -287,23 +287,20 @@ bool CSatchel::CanDeploy()
 	return false;
 }
 
-bool CSatchel::Deploy()
+void CSatchel::Deploy()
 {
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 1.0;
 
-	bool result;
-
 	if (0 != m_chargeReady)
-		result = DefaultDeploy("models/v_satchel_radio.mdl", "models/p_satchel_radio.mdl", SATCHEL_RADIO_DRAW, "hive");
-	else
-		result = DefaultDeploy("models/v_satchel.mdl", "models/p_satchel.mdl", SATCHEL_DRAW, "trip");
-
-	if (result)
 	{
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2;
+		DefaultDeploy("models/v_satchel_radio.mdl", "models/p_satchel_radio.mdl", SATCHEL_RADIO_DRAW, "hive");
+	}
+	else
+	{
+		DefaultDeploy("models/v_satchel.mdl", "models/p_satchel.mdl", SATCHEL_DRAW, "trip");
 	}
 
-	return result;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2;
 }
 
 
