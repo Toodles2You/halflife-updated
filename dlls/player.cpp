@@ -2845,7 +2845,6 @@ void CBasePlayer::Spawn()
 	for (int i = 0; i < MAX_AMMO_SLOTS; i++)
 	{
 		m_rgAmmo[i] = 0;
-		m_rgAmmoLast[i] = 0; // client ammo values also have to be reset  (the death hud clear messages does on the client side)
 	}
 
 	m_lastx = m_lasty = 0;
@@ -2853,6 +2852,11 @@ void CBasePlayer::Spawn()
 	m_flNextChatTime = gpGlobals->time;
 
 	g_pGameRules->PlayerSpawn(this);
+
+	for (int i = 0; i < MAX_AMMO_SLOTS; i++)
+	{
+		m_rgAmmoLast[i] = -1;
+	}
 }
 
 
